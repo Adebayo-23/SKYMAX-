@@ -22,3 +22,6 @@ export default defineConfig({
     tsconfigPaths(),
   ],
 });
+
+// entry.server.ts
+import "dotenv/config";
