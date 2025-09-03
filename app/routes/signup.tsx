@@ -45,6 +45,7 @@ export const action: ActionFunction = async ({ request }) => {
   }
 };
 
+export default function SignUp() {
   const actionData = useActionData<typeof action>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
