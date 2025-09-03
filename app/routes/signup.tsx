@@ -1,45 +1,55 @@
-import { Link, useNavigate } from "@remix-run/react";
+
+import { Link, useNavigate, Form, useActionData } from "@remix-run/react";
+import type { ActionFunction } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useState } from "react";
 
-export default function SignUp() {
-  const navigate = useNavigate();
+export const action: ActionFunction = async ({ request }) => {
+  const form = await request.formData();
+  const name = form.get("name")?.toString().trim();
+  const username = form.get("username")?.toString().trim();
+  const email = form.get("email")?.toString().trim();
+  const password = form.get("password")?.toString();
+  const confirmPassword = form.get("confirmPassword")?.toString();
 
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+
+  if (!username || !email || !password || !confirmPassword) {
+    return json({ error: "All fields are required." }, { status: 400 });
+  }
+  if (!emailRegex.test(email)) {
+    return json({ error: "Invalid email address" }, { status: 400 });
+  }
+  if (!passwordRegex.test(password)) {
+    return json({ error: "Password must be at least 8 characters, start with a capital letter, and contain symbols or punctuation" }, { status: 400 });
+  }
+  if (password !== confirmPassword) {
+    return json({ error: "Passwords do not match" }, { status: 400 });
+  }
+
+  // Connect to DB and create user
+  try {
+    const { connectDB } = await import("~/utils/db");
+    await connectDB();
+    const User = (await import("~/models/User")).default;
+    const existing = await User.findOne({ $or: [{ username }, { email }] });
+    if (existing) {
+      return json({ error: "Username or email already exists." }, { status: 400 });
+    }
+    await User.create({ username, email, password });
+    // Optionally, set session/cookie here
+    return redirect("/login");
+  } catch (err) {
+    return json({ error: "Server error. Please try again." }, { status: 500 });
+  }
+};
+
+  const actionData = useActionData<typeof action>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const existingUsernames = ["johnDoe", "admin", "skyuser", "bayo123"];
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$/;
-
-    if (existingUsernames.includes(username.trim())) {
-      setError("Username already taken. Please choose another.");
-    } else if (!emailRegex.test(email)) {
-      setError("Invalid email address");
-    } else if (!passwordRegex.test(password)) {
-      setError("Password must be at least 8 characters, start with a capital letter, and contain symbols or punctuation");
-    } else if (password !== confirmPassword) {
-      setError("Passwords do not match");
-    } else {
-      setError(null);
-
-      // ✅ Simulate storing user in database
-      console.log("User registered:", { username, email });
-
-      // ✅ Simulate login and storing token
-      localStorage.setItem("authToken", "mockToken_123456"); // Replace with real token in a real app
-      localStorage.setItem("user", JSON.stringify({ username, email }));
-
-      // ✅ Redirect to dashboard
-      navigate("/dashboard");
-    }
-  };
 
   return (
     <div
@@ -76,8 +86,8 @@ export default function SignUp() {
       >
         Sign Up
       </h1>
-      <form
-        onSubmit={handleSubmit}
+      <Form
+        method="post"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -171,8 +181,8 @@ export default function SignUp() {
           />
         </label>
 
-        {error && (
-          <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>
+        {actionData?.error && (
+          <p style={{ color: "red", marginBottom: "10px" }}>{actionData.error}</p>
         )}
 
         <button
@@ -196,7 +206,7 @@ export default function SignUp() {
             Login
           </Link>
         </p>
-      </form>
+      </Form>
     </div>
   );
 }

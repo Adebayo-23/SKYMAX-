@@ -1,47 +1,35 @@
-import { Link, useNavigate } from "@remix-run/react";
-import { useState, useEffect } from "react";
-import { Home } from "lucide-react"; // Home icon from lucide-react
 
-export default function Login() {
-  const navigate = useNavigate();
+import { Link, useNavigate, Form, useActionData } from "@remix-run/react";
+import type { ActionFunction } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
+import { useState } from "react";
+import { Home } from "lucide-react";
+
+export const action: ActionFunction = async ({ request }) => {
+  const form = await request.formData();
+  const username = form.get("username")?.toString().trim();
+  const password = form.get("password")?.toString();
+  if (!username || !password) {
+    return json({ error: "Username and password required." }, { status: 400 });
+  }
+  try {
+    const { connectDB } = await import("~/utils/db");
+    await connectDB();
+    const User = (await import("~/models/User")).default;
+    const user = await User.findOne({ username });
+    if (!user || user.password !== password) {
+      return json({ error: "Invalid username or password." }, { status: 401 });
+    }
+    // Optionally, set session/cookie here
+    return redirect("/dashboard");
+  } catch (err) {
+    return json({ error: "Server error. Please try again." }, { status: 500 });
+  }
+};
+
+  const actionData = useActionData<typeof action>();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  // 🔐 Include the new user
-  const registeredUsers = [
-    { username: "johnDoe", password: "Pass@123" },
-    { username: "admin", password: "Admin@456" },
-    { username: "skyuser", password: "Sky@789" },
-    { username: "NAME", password: "Wizsean222!" }, // 🔥 Your user added
-  ];
-
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const validUser = registeredUsers.find(
-      (user) => user.username === username && user.password === password
-    );
-
-    if (validUser) {
-      setError(null);
-      console.log("Login successful!");
-
-      // Simulate token store
-      localStorage.setItem("authToken", "fakeTokenFor_" + validUser.username);
-      localStorage.setItem("user", JSON.stringify(validUser));
-
-      navigate("/dashboard");
-    } else {
-      setError("Invalid username or password.");
-    }
-  };
-
-  // OPTIONAL: Automatically login with preset credentials
-  useEffect(() => {
-    setUsername("NAME");
-    setPassword("Wizsean222!");
-  }, []);
 
   return (
     <div
@@ -89,8 +77,8 @@ export default function Login() {
       </h1>
 
       {/* Login Form */}
-      <form
-        onSubmit={handleLogin}
+      <Form
+        method="post"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -138,8 +126,8 @@ export default function Login() {
           />
         </label>
 
-        {error && (
-          <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>
+        {actionData?.error && (
+          <p style={{ color: "red", marginBottom: "10px" }}>{actionData.error}</p>
         )}
 
         <button
@@ -162,7 +150,7 @@ export default function Login() {
         <Link to="/signup" style={{ color: "#6c5ce7", fontSize: "14px" }}>
           Don't have an account? Sign Up
         </Link>
-      </form>
+      </Form>
     </div>
   );
 }
