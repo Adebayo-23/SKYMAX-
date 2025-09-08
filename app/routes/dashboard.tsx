@@ -37,5 +37,12 @@ const events = [
 ];
 
 export default function DashboardRoute() {
-  return <ScheduleDashboard tasks={tasks} events={events} />;
+  // Get user from localStorage (client-side only)
+  let user = undefined;
+  if (typeof window !== "undefined") {
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {}
+  }
+  return <ScheduleDashboard user={user} tasks={tasks} />;
 }
