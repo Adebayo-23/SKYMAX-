@@ -1,9 +1,9 @@
-
 import { Link, useNavigate, Form, useActionData } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useState } from "react";
 import { Home } from "lucide-react";
+import { createUserSession } from "~/utils/session.server";
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
@@ -20,8 +20,8 @@ export const action: ActionFunction = async ({ request }) => {
     if (!user || user.password !== password) {
       return json({ error: "Invalid username or password." }, { status: 401 });
     }
-    // Optionally, set session/cookie here
-    return redirect("/dashboard");
+    // create a session storing the username and redirect to dashboard
+    return createUserSession(user.username, "/dashboard");
   } catch (err) {
     return json({ error: "Server error. Please try again." }, { status: 500 });
   }
