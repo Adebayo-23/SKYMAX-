@@ -3,39 +3,71 @@ import type { LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData, useFetcher, Link } from "@remix-run/react";
 import { getUsername } from "~/utils/session.server";
-import { connectDB } from "~/utils/db";
-import User from "~/models/User";
+import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
+import User, { IUser } from "~/models/User";
+
+type ProfileLoaderData = { profile: { displayName: string; bio: string; avatarUrl: string | null; username: string } };
 
 export const loader: LoaderFunction = async ({ request }) => {
   const username = await getUsername(request);
   if (!username) return redirect("/login");
-
   await connectDB();
-  const user = await User.findOne({ username }).lean();
+  try {
+    console.log('[loader] profile start for', username);
+    if (isDBAvailable()) {
+      const user = (await User.findOne({ username }).lean()) as IUser | null;
+      console.log('[loader] DB available, user:', !!user);
 
-  return json({ profile: { displayName: user?.displayName || "", bio: user?.bio || "", avatarUrl: user?.avatarUrl || null, username } });
+      const result: ProfileLoaderData = { profile: { displayName: user?.displayName || "", bio: user?.bio || "", avatarUrl: user?.avatarUrl || null, username } };
+      return json(result);
+    }
+
+    // DB not available — return in-memory profile if present
+    const store = getInMemoryStore();
+    const user = store[username];
+    console.log('[loader] DB not available, in-memory user:', !!user);
+    const result: ProfileLoaderData = { profile: { displayName: user?.displayName || "", bio: user?.bio || "", avatarUrl: user?.avatarUrl || null, username } };
+    return json(result);
+  } catch (err) {
+    console.error('[loader] Error in profile loader:', err);
+    // Return a JSON 500 response to ensure caller receives a defined payload
+    let message = 'Failed to load profile';
+    if (err && typeof err === 'object' && 'message' in err) {
+      const obj = err as { [k: string]: unknown };
+      const m = obj['message'];
+      if (typeof m === 'string') message = m;
+    }
+    return json({ message: 'Failed to load profile', error: message }, { status: 500 });
+  }
 };
 
 export default function ProfilePage() {
-  const data = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
+  const data = useLoaderData<ProfileLoaderData>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fetcher = useFetcher<any>();
   const [status, setStatus] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(data.profile.avatarUrl || null);
   const [submitting, setSubmitting] = useState(false);
+  const [displayName, setDisplayName] = useState<string>(data.profile.displayName || "");
+  const [bio, setBio] = useState<string>(data.profile.bio || "");
 
   useEffect(() => {
-    if (fetcher.type === "done") {
+    // fetcher.state is 'idle' | 'submitting' | 'loading'
+    if (fetcher.state === "loading" || fetcher.state === "idle") {
       if (fetcher.data?.success) {
         setStatus("Profile updated successfully.");
         setPreview(fetcher.data.user?.avatarUrl || preview);
+        // update local fields so the UI reflects saved values immediately
+        if (typeof fetcher.data.user?.displayName === 'string') setDisplayName(fetcher.data.user.displayName);
+        if (typeof fetcher.data.user?.bio === 'string') setBio(fetcher.data.user.bio);
         setSubmitting(false);
       } else if (fetcher.data?.error) {
         setStatus(String(fetcher.data.error));
         setSubmitting(false);
       }
     }
-  }, [fetcher]);
+  }, [fetcher, preview]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files && e.target.files[0];
@@ -67,8 +99,12 @@ export default function ProfilePage() {
 
         <form onSubmit={(e) => {
           e.preventDefault();
-          const form = e.currentTarget as HTMLFormElement;
-          const fd = new FormData(form);
+          const fd = new FormData();
+          fd.append('displayName', displayName);
+          fd.append('bio', bio);
+          const fileInput = fileRef.current;
+          const file = fileInput?.files?.[0];
+          if (file) fd.append('avatar', file);
           setSubmitting(true);
           fetcher.submit(fd, { action: '/api/profile', method: 'post' });
         }} method="post" encType="multipart/form-data" style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -77,8 +113,8 @@ export default function ProfilePage() {
             <button type="button" onClick={() => fileRef.current?.click()} style={{ background: '#ff7ab6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>Choose File</button>
           </label>
 
-          <input name="displayName" placeholder="Display name" defaultValue={data.profile.displayName} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }} />
-          <input name="bio" placeholder="Bio" defaultValue={data.profile.bio} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }} />
+          <input name="displayName" placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }} />
+          <input name="bio" placeholder="Bio" value={bio} onChange={(e) => setBio(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }} />
 
           <button type="submit" style={{ background: '#4B0082', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>{submitting ? 'Saving...' : 'Save Profile'}</button>
         </form>

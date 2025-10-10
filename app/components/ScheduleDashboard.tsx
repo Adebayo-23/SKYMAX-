@@ -14,9 +14,10 @@ interface ScheduleDashboardProps {
 }
 
 const ScheduleDashboard: React.FC<ScheduleDashboardProps> = ({ tasks }) => {
-	const [newTask, setNewTask] = useState({
+	type NewTaskForm = { title: string; priority: "low" | "medium" | "high"; dueDate: string; category: string };
+	const [newTask, setNewTask] = useState<NewTaskForm>({
 		title: "",
-		priority: "medium" as const,
+		priority: "medium",
 		dueDate: "",
 		category: "General"
 	});
