@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useFetcher, Link } from "@remix-run/react";
+import { useLoaderData, useFetcher, Link, useNavigate } from "@remix-run/react";
 import { getUsername } from "~/utils/session.server";
 import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
 import User, { IUser } from "~/models/User";
@@ -52,6 +52,8 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState<string>(data.profile.displayName || "");
   const [bio, setBio] = useState<string>(data.profile.bio || "");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     // fetcher.state is 'idle' | 'submitting' | 'loading'
     if (fetcher.state === "loading" || fetcher.state === "idle") {
@@ -62,12 +64,22 @@ export default function ProfilePage() {
         if (typeof fetcher.data.user?.displayName === 'string') setDisplayName(fetcher.data.user.displayName);
         if (typeof fetcher.data.user?.bio === 'string') setBio(fetcher.data.user.bio);
         setSubmitting(false);
+
+        // Wait a moment to show success message, then go back to previous page
+        setTimeout(() => {
+          try {
+            navigate(-1);
+          } catch (e) {
+            // fallback to dashboard
+            navigate('/dashboard');
+          }
+        }, 700);
       } else if (fetcher.data?.error) {
         setStatus(String(fetcher.data.error));
         setSubmitting(false);
       }
     }
-  }, [fetcher, preview]);
+  }, [fetcher, preview, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files && e.target.files[0];
