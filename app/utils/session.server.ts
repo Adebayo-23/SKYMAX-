@@ -24,6 +24,9 @@ export async function getUsername(request: Request) {
   return typeof username === "string" ? username : null;
 }
 
+// Export commitSession so route actions can set flashes and include Set-Cookie in responses
+export { getSession, commitSession };
+
 export async function requireUser(request: Request) {
   const username = await getUsername(request);
   if (!username) throw redirect("/login");

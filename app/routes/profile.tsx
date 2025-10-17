@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import type { LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useFetcher, Link, useNavigate } from "@remix-run/react";
+import { useLoaderData, Form, Link } from "@remix-run/react";
 import { getUsername } from "~/utils/session.server";
 import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
 import User, { IUser } from "~/models/User";
@@ -43,43 +43,12 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export default function ProfilePage() {
   const data = useLoaderData<ProfileLoaderData>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fetcher = useFetcher<any>();
-  const [status, setStatus] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(data.profile.avatarUrl || null);
-  const [submitting, setSubmitting] = useState(false);
   const [displayName, setDisplayName] = useState<string>(data.profile.displayName || "");
   const [bio, setBio] = useState<string>(data.profile.bio || "");
 
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    // fetcher.state is 'idle' | 'submitting' | 'loading'
-    if (fetcher.state === "loading" || fetcher.state === "idle") {
-      if (fetcher.data?.success) {
-        setStatus("Profile updated successfully.");
-        setPreview(fetcher.data.user?.avatarUrl || preview);
-        // update local fields so the UI reflects saved values immediately
-        if (typeof fetcher.data.user?.displayName === 'string') setDisplayName(fetcher.data.user.displayName);
-        if (typeof fetcher.data.user?.bio === 'string') setBio(fetcher.data.user.bio);
-        setSubmitting(false);
-
-        // Wait a moment to show success message, then go back to previous page
-        setTimeout(() => {
-          try {
-            navigate(-1);
-          } catch (e) {
-            // fallback to dashboard
-            navigate('/dashboard');
-          }
-        }, 700);
-      } else if (fetcher.data?.error) {
-        setStatus(String(fetcher.data.error));
-        setSubmitting(false);
-      }
-    }
-  }, [fetcher, preview, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files && e.target.files[0];
@@ -109,17 +78,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData();
-          fd.append('displayName', displayName);
-          fd.append('bio', bio);
-          const fileInput = fileRef.current;
-          const file = fileInput?.files?.[0];
-          if (file) fd.append('avatar', file);
-          setSubmitting(true);
-          fetcher.submit(fd, { action: '/api/profile', method: 'post' });
-        }} method="post" encType="multipart/form-data" style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Form method="post" action="/api/profile" encType="multipart/form-data" style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <label style={{ display: 'inline-block' }}>
             <input type="file" name="avatar" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} ref={fileRef} />
             <button type="button" onClick={() => fileRef.current?.click()} style={{ background: '#ff7ab6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>Choose File</button>
@@ -128,14 +87,10 @@ export default function ProfilePage() {
           <input name="displayName" placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }} />
           <input name="bio" placeholder="Bio" value={bio} onChange={(e) => setBio(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }} />
 
-          <button type="submit" style={{ background: '#4B0082', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>{submitting ? 'Saving...' : 'Save Profile'}</button>
-        </form>
+          <button type="submit" style={{ background: '#4B0082', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Save Profile</button>
+        </Form>
 
-        {status && (
-          <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: fetcher.data?.success ? '#e6ffed' : '#ffe6e6', color: fetcher.data?.success ? '#0b6b2a' : '#b21c1c' }}>
-            {status}
-          </div>
-        )}
+        {/* Status/errors are shown on dashboard via flash; keep this compact here */}
 
         <div style={{ marginTop: 12 }}>
           <Link to="/dashboard" style={{ color: '#7b2b9b' }}>Back to Dashboard</Link>

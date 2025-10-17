@@ -1,7 +1,7 @@
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
-import { getUsername } from "~/utils/session.server";
+import { getUsername, getSession, commitSession } from "~/utils/session.server";
 import User, { IUser } from "~/models/User";
 import fs from "fs";
 import path from "path";
@@ -71,7 +71,11 @@ export const action: ActionFunction = async ({ request }) => {
 
       await user.save();
 
-      return json({ success: true, user: { username: user.username, displayName: user.displayName, bio: user.bio, avatarUrl: user.avatarUrl } });
+      // Set a flash message and redirect to dashboard so the UI shows success after redirect
+      const session = await getSession(request.headers.get('cookie'));
+      session.flash('profileMessage', 'Profile updated successfully');
+      const setCookie = await commitSession(session);
+      return redirect('/dashboard', { headers: { 'Set-Cookie': setCookie } });
     }
 
     // DB not available — use in-memory fallback
@@ -116,8 +120,13 @@ export const action: ActionFunction = async ({ request }) => {
       existing.avatarUrl = `/uploads/${filename}`;
     }
 
-    store[username] = existing;
-    return json({ success: true, user: existing });
+  store[username] = existing;
+
+  // set flash for in-memory fallback as well and redirect
+  const session = await getSession(request.headers.get('cookie'));
+  session.flash('profileMessage', 'Profile updated successfully');
+  const setCookie = await commitSession(session);
+  return redirect('/dashboard', { headers: { 'Set-Cookie': setCookie } });
   } catch (err) {
     console.error('[action] Unexpected error in /api/profile action:', err);
     let message = 'Unexpected server error';

@@ -2,7 +2,7 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { getUsername } from "~/utils/session.server";
+import { getUsername, getSession, commitSession } from "~/utils/session.server";
 import ScheduleDashboard from "~/components/ScheduleDashboard";
 import { connectDB } from "~/utils/db";
 import Task from "~/models/Task";
@@ -29,11 +29,19 @@ export const loader: LoaderFunction = async ({ request }) => {
   const tasksSafe = tasks.map(t => ({ ...t, dueDate: t.dueDate ? t.dueDate.toISOString() : null }));
   const eventsSafe = events.map(e => ({ ...e, date: e.date ? e.date.toISOString() : null }));
 
-  return json({ username, tasks: tasksSafe, events: eventsSafe, profile: { displayName: user?.displayName || null, bio: user?.bio || null, avatarUrl: user?.avatarUrl || null } });
+  // Read any flash message and clear it
+  const session = await getSession(request.headers.get('cookie'));
+  const profileMessage = session.get('profileMessage') as string | undefined | null;
+  const headers: Record<string,string> = {};
+  if (profileMessage) {
+    headers['Set-Cookie'] = await commitSession(session);
+  }
+
+  return json({ username, tasks: tasksSafe, events: eventsSafe, profile: { displayName: user?.displayName || null, bio: user?.bio || null, avatarUrl: user?.avatarUrl || null }, flash: { profileMessage: profileMessage || null } }, { headers });
 };
 
 export default function Dashboard() {
-  const data = useLoaderData<DashboardLoaderData>();
+  const data = useLoaderData<DashboardLoaderData & { flash?: { profileMessage?: string | null } }>();
   // no fetcher needed in this wrapper route
 
   // no direct handlers here; UI components manage their own interactions via API routes
@@ -41,10 +49,21 @@ export default function Dashboard() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Dashboard</h1>
-      <p>
-        Welcome, <strong>{data.profile.displayName || data.username}</strong>!
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {data.profile.avatarUrl ? (
+          <img src={data.profile.avatarUrl} alt="Profile" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }} />
+        ) : (
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>No</div>
+        )}
+        <p style={{ margin: 0 }}>
+          Welcome, <strong>{data.profile.displayName || data.username}</strong>!
+        </p>
+      </div>
       <Link to="/">Home</Link>
+
+      {data.flash?.profileMessage && (
+        <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: '#e6ffed', color: '#0b6b2a' }}>{data.flash.profileMessage}</div>
+      )}
 
       <div style={{ marginTop: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
