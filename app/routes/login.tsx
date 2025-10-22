@@ -1,9 +1,11 @@
-import { Link, useNavigate, Form, useActionData } from "@remix-run/react";
+import { Link, Form, useActionData } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { useState } from "react";
+import { json } from "@remix-run/node";
+import { useState, useEffect } from "react";
 import { Home } from "lucide-react";
 import { createUserSession } from "~/utils/session.server";
+import { connectDB, isDBAvailable } from "~/utils/db";
+import User from "~/models/User";
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
@@ -13,17 +15,31 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ error: "Username and password required." }, { status: 400 });
   }
   try {
-    const { connectDB } = await import("~/utils/db");
     await connectDB();
-    const User = (await import("~/models/User")).default;
-    const user = await User.findOne({ username });
+
+    // If the DB isn't configured/available, fail fast with a clear error
+    if (!isDBAvailable()) {
+      // Use in-memory fallback store for auth in development
+      const { getInMemoryStore } = await import("~/utils/db");
+      const store = getInMemoryStore();
+      const existing = store[username];
+      if (!existing || existing.password !== password) {
+        return json({ error: "Invalid username or password." }, { status: 401 });
+      }
+      return createUserSession(existing.username, "/dashboard");
+    }
+
+    const user = await User.findOne({ username }).exec();
     if (!user || user.password !== password) {
       return json({ error: "Invalid username or password." }, { status: 401 });
     }
     // create a session storing the username and redirect to dashboard
     return createUserSession(user.username, "/dashboard");
   } catch (err) {
-    return json({ error: "Server error. Please try again." }, { status: 500 });
+    // Log the error to the server console for debugging
+    console.error('[action] Unexpected error in /login action:', err);
+    const message = err && typeof err === 'object' && 'message' in err ? (err as { message?: unknown }).message : 'Server error. Please try again.';
+    return json({ error: typeof message === 'string' ? message : 'Server error. Please try again.' }, { status: 500 });
   }
 };
 
@@ -31,6 +47,11 @@ export default function Login() {
   const actionData = useActionData<typeof action>();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (actionData?.error) setLoading(false);
+  }, [actionData]);
 
   return (
     <div
@@ -43,6 +64,7 @@ export default function Login() {
         position: "relative",
       }}
     >
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       {/* SkyMax Top Right */}
       <div
         style={{
@@ -80,6 +102,7 @@ export default function Login() {
       {/* Login Form */}
       <Form
         method="post"
+        onSubmit={() => setLoading(true)}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -133,6 +156,8 @@ export default function Login() {
 
         <button
           type="submit"
+          disabled={loading}
+          aria-busy={loading ? 'true' : 'false'}
           style={{
             padding: "10px",
             backgroundColor: "#6c5ce7",
@@ -141,15 +166,26 @@ export default function Login() {
             borderRadius: "5px",
             width: "100%",
             marginBottom: "10px",
-            cursor: "pointer",
+            cursor: loading ? 'default' : 'pointer',
+            opacity: loading ? 0.8 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
-          Login
+          {loading ? (
+            <>
+              <span style={{ width: 14, height: 14, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', marginRight: 8, display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+              Logging in...
+            </>
+          ) : (
+            'Login'
+          )}
         </button>
 
         {/* Sign Up Link just below button */}
         <Link to="/signup" style={{ color: "#6c5ce7", fontSize: "14px" }}>
-          Don't have an account? Sign Up
+          Don&apos;t have an account? Sign Up
         </Link>
       </Form>
     </div>

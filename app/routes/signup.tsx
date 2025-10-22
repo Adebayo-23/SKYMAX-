@@ -1,5 +1,5 @@
 
-import { Link, useNavigate, Form, useActionData } from "@remix-run/react";
+import { Link, Form, useActionData } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useState } from "react";
@@ -30,15 +30,24 @@ export const action: ActionFunction = async ({ request }) => {
 
   // Connect to DB and create user
   try {
-    const { connectDB } = await import("~/utils/db");
+    const { connectDB, isDBAvailable, getInMemoryStore } = await import("~/utils/db");
     await connectDB();
-    const User = (await import("~/models/User")).default;
-    const existing = await User.findOne({ $or: [{ username }, { email }] });
-    if (existing) {
+    if (isDBAvailable()) {
+      const User = (await import("~/models/User")).default;
+      const existing = await User.findOne({ $or: [{ username }, { email }] });
+      if (existing) {
+        return json({ error: "Username or email already exists." }, { status: 400 });
+      }
+      await User.create({ username, email, password });
+      return redirect("/login");
+    }
+
+    // DB not available — store user in in-memory fallback (dev only)
+    const store = getInMemoryStore();
+    if (store[username] || Object.values(store).some(u => u.email === email)) {
       return json({ error: "Username or email already exists." }, { status: 400 });
     }
-    await User.create({ username, email, password });
-    // Optionally, set session/cookie here
+    store[username] = { username, email, password, displayName: name || null, bio: null, avatarUrl: null };
     return redirect("/login");
   } catch (err) {
     return json({ error: "Server error. Please try again." }, { status: 500 });

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // In-memory fallback store used when no DB is configured (development only)
-type InMemoryUser = { username: string; displayName?: string | null; bio?: string | null; avatarUrl?: string | null };
+type InMemoryUser = { username: string; email?: string | null; password?: string | null; displayName?: string | null; bio?: string | null; avatarUrl?: string | null };
 const inMemoryStore: Record<string, InMemoryUser> = {};
 
 let dbAvailable = false;
