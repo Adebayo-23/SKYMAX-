@@ -22,15 +22,27 @@ export const action: ActionFunction = async ({ request }) => {
       // Use in-memory fallback store for auth in development
       const { getInMemoryStore } = await import("~/utils/db");
       const store = getInMemoryStore();
-      const existing = store[username];
+      // Case-insensitive lookup for development in-memory store — match by username or email
+      const usernameLower = username.toLowerCase();
+      const existing = Object.values(store).find(u => {
+        const un = (u.username || '').toLowerCase();
+        const em = (u.email || '').toLowerCase();
+        return un === usernameLower || em === usernameLower;
+      });
+      console.log('[login] Using in-memory store. username:', username, 'found:', !!existing);
       if (!existing || existing.password !== password) {
+        console.warn('[login] Invalid credentials for user (in-memory):', username);
         return json({ error: "Invalid username or password." }, { status: 401 });
       }
       return createUserSession(existing.username, "/dashboard");
     }
 
-    const user = await User.findOne({ username }).exec();
+    // Do a case-insensitive username lookup in MongoDB to avoid accidental 401s from case differences
+    const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const user = await User.findOne({ username: { $regex: `^${escapeRegex(username)}$`, $options: 'i' } }).exec();
+    console.log('[login] DB lookup. username:', username, 'found:', !!user);
     if (!user || user.password !== password) {
+      console.warn('[login] Invalid credentials for user (db):', username);
       return json({ error: "Invalid username or password." }, { status: 401 });
     }
     // create a session storing the username and redirect to dashboard

@@ -6,8 +6,14 @@ import User, { IUser } from "~/models/User";
 import fs from "fs";
 import path from "path";
 
+// Local in-memory user shape (matches `app/utils/db.ts` InMemoryUser)
+type InMemoryUser = { username: string; email?: string | null; displayName?: string | null; bio?: string | null; avatarUrl?: string | null };
+
+console.log('[module] loaded api/profile.ts');
+
 export const action: ActionFunction = async ({ request }) => {
   try {
+    console.log('[action] /api/profile invoked');
     await connectDB();
 
     const username = await getUsername(request);
@@ -25,6 +31,7 @@ export const action: ActionFunction = async ({ request }) => {
     const file = formData.get("avatar");
 
     if (isDBAvailable()) {
+      console.log('[action] DB available — updating DB user');
       const user = (await User.findOne({ username })) as IUser | null;
       if (!user) return json({ error: "User not found" }, { status: 404 });
 
@@ -67,6 +74,7 @@ export const action: ActionFunction = async ({ request }) => {
         fs.writeFileSync(filePath, buffer);
 
         user.avatarUrl = `/uploads/${filename}`;
+        console.log('[action] Saved avatar to', filePath);
       }
 
       await user.save();
@@ -78,9 +86,18 @@ export const action: ActionFunction = async ({ request }) => {
       return redirect('/dashboard', { headers: { 'Set-Cookie': setCookie } });
     }
 
-    // DB not available — use in-memory fallback
+  // DB not available — use in-memory fallback
     const store = getInMemoryStore();
-    const existing = store[username] || { username, displayName: null, bio: null, avatarUrl: null };
+    // Try to match by username or email (case-insensitive) — helpful when DB is down but user was created elsewhere
+    const lookupKey = username.toLowerCase();
+    let existing = store[username];
+    if (!existing) {
+      existing = (Object.values(store).find(u => ((u.username || '').toLowerCase() === lookupKey) || ((u.email || '').toLowerCase() === lookupKey)) as unknown) as InMemoryUser | null || null;
+    }
+    if (!existing) {
+      // Create a minimal record so profile can be updated in-memory for local dev
+      existing = { username, email: null, displayName: null, bio: null, avatarUrl: null };
+    }
     if (typeof displayName === "string") existing.displayName = displayName.trim();
     if (typeof bio === "string") existing.bio = bio.trim();
 
@@ -118,9 +135,11 @@ export const action: ActionFunction = async ({ request }) => {
       fs.writeFileSync(filePath, buffer);
 
       existing.avatarUrl = `/uploads/${filename}`;
+      console.log('[action] Saved avatar to', filePath, '(in-memory)');
     }
 
-  store[username] = existing;
+  // Store by username key to make future lookups consistent
+  store[existing.username || username] = existing;
 
   // set flash for in-memory fallback as well and redirect
   const session = await getSession(request.headers.get('cookie'));
@@ -140,8 +159,10 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
+  console.log('[loader] profile start');
   await connectDB();
   const username = await getUsername(request);
+  console.log('[loader] username from session:', username);
   if (!username) return json({ error: 'Unauthorized' }, { status: 401 });
 
   if (isDBAvailable()) {

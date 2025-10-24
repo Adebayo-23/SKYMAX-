@@ -1,6 +1,11 @@
 import React from 'react';
 
-export function Calendar({ selected, onSelect, ...props }: { selected: Date; onSelect: (date: Date) => void; } & React.HTMLAttributes<HTMLDivElement>) {
+// Omit the DOM onSelect attribute from HTMLAttributes so our `onSelect` prop
+// can be typed as (date: Date) => void without colliding with the native
+// DOM event handler type.
+type CalendarProps = { selected: Date; onSelect: (date: Date) => void } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>;
+
+export function Calendar({ selected, onSelect, ...props }: CalendarProps) {
   // Placeholder calendar: just shows today's date and a button to select it
   return (
     <div {...props}>

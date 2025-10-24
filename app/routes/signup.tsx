@@ -34,7 +34,9 @@ export const action: ActionFunction = async ({ request }) => {
     await connectDB();
     if (isDBAvailable()) {
       const User = (await import("~/models/User")).default;
-      const existing = await User.findOne({ $or: [{ username }, { email }] });
+      // Case-insensitive check for existing username or email
+      const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const existing = await User.findOne({ $or: [ { username: { $regex: `^${escapeRegex(username)}$`, $options: 'i' } }, { email: { $regex: `^${escapeRegex(email)}$`, $options: 'i' } } ] });
       if (existing) {
         return json({ error: "Username or email already exists." }, { status: 400 });
       }

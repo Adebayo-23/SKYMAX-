@@ -1,6 +1,18 @@
-// This file intentionally disabled to prevent duplicate route handling.
-// Rename or remove this file if you want the filesystem route to be handled by a single implementation.
-// Historically a duplicate route placeholder. Removed to avoid route shadowing.
-// If you see a 404 for /api/profile after restarting the dev server, restart the server.
+import React from 'react';
+export { action, loader } from './profile';
 
-export {};
+export default function ApiProfilePage() {
+  // This route is primarily an API endpoint. When a user navigates to /api/profile
+  // in a browser we provide a tiny informational page instead of a 404.
+  return (
+    <div style={{ padding: 24 }}>
+      <h2>/api/profile</h2>
+      <p>This URL is an API endpoint. Use the profile UI at <a href="/profile">/profile</a> or the dashboard.</p>
+    </div>
+  );
+}
+// Re-export the real implementation from profile.ts so the filesystem route
+// is handled by a single module. This avoids the placeholder shadowing the
+// actual route and causing 404s for /api/profile.
+
+export * from './profile';

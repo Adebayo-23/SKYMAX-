@@ -29,7 +29,7 @@ export function TaskManager({ tasks, onAddTask, onToggleTask }: TaskManagerProps
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
-    priority: 'medium' as const,
+    priority: 'medium' as 'high' | 'medium' | 'low',
     dueDate: '',
     category: 'General'
   });
@@ -132,7 +132,7 @@ export function TaskManager({ tasks, onAddTask, onToggleTask }: TaskManagerProps
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="priority">Priority</Label>
-                <Select value={newTask.priority} onValueChange={(value: 'high' | 'medium' | 'low') => setNewTask({ ...newTask, priority: value })}>
+                <Select value={newTask.priority} onValueChange={(value: string) => setNewTask({ ...newTask, priority: value as 'high' | 'medium' | 'low' })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

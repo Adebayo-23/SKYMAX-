@@ -36,7 +36,19 @@ export async function connectDB() {
     console.log("✅ Connected to MongoDB");
   } catch (error) {
     dbAvailable = false;
+    // Provide a clearer message for common SRV/DNS failures (e.g. ESERVFAIL when using Atlas SRV)
     console.error("❌ MongoDB connection error:", error);
+    try {
+      const hostMatch = String(MONGODB_URI).match(/@([^/]+)/);
+      if (hostMatch && hostMatch[1]) {
+        console.error("MongoDB host detected:", hostMatch[1]);
+      }
+    } catch (e) {
+      // ignore
+    }
+    if (error && typeof error === 'object' && 'code' in (error as any) && (error as any).code === 'ESERVFAIL') {
+      console.error("DNS SRV lookup failed (ESERVFAIL). If you're using a MongoDB Atlas SRV connection string (mongodb+srv://), ensure your machine can resolve SRV DNS records and that the hostname is correct. As a workaround for local development, set MONGODB_URI to a standard connection string (mongodb://host:port/db) or run without a DB to use the in-memory fallback.");
+    }
     // Do not throw here — fallback to in-memory mode for local dev
   }
 }
