@@ -1,99 +1,154 @@
-import React, { useRef, useState } from "react";
-import type { LoaderFunction } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { useLoaderData, Form, Link } from "@remix-run/react";
+import React, { useState, useRef } from "react";
+import { useLoaderData, Form } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { getUsername } from "~/utils/session.server";
-import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
-import User, { IUser } from "~/models/User";
+import { connectDB } from "~/utils/db";
+import User from "~/models/User";
+import fs from "fs";
 
-type ProfileLoaderData = { profile: { displayName: string; bio: string; avatarUrl: string | null; username: string } };
+// COMMENT OUT THESE 3 LINES IF YOUR BUTTON/INPUT/CARD IS BROKEN
+// import { Button } from '~/components/ui/button';
+// import { Input } from '~/components/ui/input';
+// import { Card } from '~/components/ui/card';
+
+// TAILWIND & BASE CSS ***MUST*** BE LOADED IN YOUR APP
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const username = await getUsername(request);
-  if (!username) return redirect("/login");
   await connectDB();
+  const username = await getUsername(request);
+  if (!username) throw new Response("Unauthorized", { status: 401 });
+  const user = await User.findOne({ username });
+  return json({ user });
+};
+
+export const action: ActionFunction = async ({ request }) => {
+  await connectDB();
+  const username = await getUsername(request);
+  if (!username) return json({ error: "Unauthorized" }, { status: 401 });
+  const formData = await request.formData();
   try {
-    console.log('[loader] profile start for', username);
-    if (isDBAvailable()) {
-      const user = (await User.findOne({ username }).lean()) as IUser | null;
-      console.log('[loader] DB available, user:', !!user);
-
-      const result: ProfileLoaderData = { profile: { displayName: user?.displayName || "", bio: user?.bio || "", avatarUrl: user?.avatarUrl || null, username } };
-      return json(result);
+    const user = await User.findOne({ username });
+    const newUsername = (formData.get("username") as string) || user.username;
+    const bio = (formData.get("bio") as string) || user.bio;
+    if (newUsername && newUsername !== username) {
+      const existingUser = await User.findOne({ username: newUsername });
+      if (existingUser) return json({ error: "Username already taken" }, { status: 400 });
     }
-
-    // DB not available — return in-memory profile if present
-    const store = getInMemoryStore();
-    const user = store[username];
-    console.log('[loader] DB not available, in-memory user:', !!user);
-    const result: ProfileLoaderData = { profile: { displayName: user?.displayName || "", bio: user?.bio || "", avatarUrl: user?.avatarUrl || null, username } };
-    return json(result);
-  } catch (err) {
-    console.error('[loader] Error in profile loader:', err);
-    // Return a JSON 500 response to ensure caller receives a defined payload
-    let message = 'Failed to load profile';
-    if (err && typeof err === 'object' && 'message' in err) {
-      const obj = err as { [k: string]: unknown };
-      const m = obj['message'];
-      if (typeof m === 'string') message = m;
+    user.username = newUsername;
+    user.bio = bio;
+    const avatarFile = formData.get("avatar") as File | null;
+    if (avatarFile && avatarFile.size && typeof avatarFile.arrayBuffer === "function") {
+      const buffer = Buffer.from(await avatarFile.arrayBuffer());
+      const ext = avatarFile.name.split(".").pop() || "png";
+      const fileName = `${newUsername || username}-${Date.now()}.${ext}`;
+      const filePath = `/uploads/${fileName}`;
+      await fs.promises.writeFile(`public${filePath}`, buffer);
+      user.avatarUrl = filePath;
     }
-    return json({ message: 'Failed to load profile', error: message }, { status: 500 });
+    await user.save();
+    return json({ success: true });
+  } catch {
+    return json({ error: "Failed to update profile" }, { status: 500 });
   }
 };
 
 export default function ProfilePage() {
-  const data = useLoaderData<ProfileLoaderData>();
-  const fileRef = useRef<HTMLInputElement | null>(null);
-  const [preview, setPreview] = useState<string | null>(data.profile.avatarUrl || null);
-  const [displayName, setDisplayName] = useState<string>(data.profile.displayName || "");
-  const [bio, setBio] = useState<string>(data.profile.bio || "");
+  const { user } = useLoaderData();
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState("No file chosen");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return setPreview(data.profile.avatarUrl || null);
-    const url = URL.createObjectURL(f);
-    setPreview(url);
+  const handlePreview = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setSelectedFileName("No file chosen");
+      setPreviewImage(null);
+      return;
+    }
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => setPreviewImage(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Profile Setup</h1>
-      <p>Manage your display name, bio and profile picture.</p>
-
-      <div style={{ marginTop: 20, background: '#fff', padding: 16, borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.08)' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ width: 96, height: 96, borderRadius: 12, overflow: 'hidden', background: '#f3f3f3', border: '2px solid #f0e6f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {preview ? (
-              <img src={preview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>No Avatar</div>
-            )}
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0, fontSize: 20 }}>{data.profile.displayName || data.profile.username}</h3>
-            <p style={{ margin: '4px 0 0 0', color: '#666' }}>{data.profile.bio || 'Add a short bio to show on your dashboard'}</p>
-          </div>
+    <div>
+      {/* Gradient header */}
+      <div className="bg-gradient-to-b from-purple-800 to-purple-900 py-16 text-white">
+        <div className="container mx-auto px-4">
+          <h1 className="text-5xl font-bold">Profile Setup</h1>
+          <p className="mt-4 text-lg max-w-2xl">
+            Manage your display name, bio and profile picture.
+          </p>
         </div>
-
-        <Form method="post" action="/api/profile" encType="multipart/form-data" style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ display: 'inline-block' }}>
-            <input type="file" name="avatar" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} ref={fileRef} />
-            <button type="button" onClick={() => fileRef.current?.click()} style={{ background: '#ff7ab6', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>Choose File</button>
-          </label>
-
-          <input name="displayName" placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }} />
-          <input name="bio" placeholder="Bio" value={bio} onChange={(e) => setBio(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }} />
-
-          <button type="submit" style={{ background: '#4B0082', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 8, cursor: 'pointer' }}>Save Profile</button>
-        </Form>
-
-        {/* Status/errors are shown on dashboard via flash; keep this compact here */}
-
-        <div style={{ marginTop: 12 }}>
-          <Link to="/dashboard" style={{ color: '#7b2b9b' }}>Back to Dashboard</Link>
+      </div>
+      {/* Overlapping Card */}
+      <div className="container mx-auto px-4 -mt-12">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <Form method="post" encType="multipart/form-data">
+            <div className="flex items-center space-x-6">
+              {/* Avatar block */}
+              <div className="w-20 h-20 rounded-md overflow-hidden border border-gray-200">
+                <img
+                  src={previewImage || user.avatarUrl || "/uploads/default-avatar.png"}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Text and Inputs */}
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Add a short bio to show on your dashboard
+                </h3>
+                <div className="flex items-center space-x-3 mt-2">
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    name="avatar"
+                    onChange={handlePreview}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-pink-500 text-white px-3 py-2 rounded-md"
+                  >
+                    Choose File
+                  </button>
+                  <span className="text-gray-500">{selectedFileName}</span>
+                  <input
+                    type="text"
+                    name="username"
+                    placeholder="Display name"
+                    defaultValue={user.username}
+                    className="border rounded px-2 py-1 w-56"
+                  />
+                  <input
+                    type="text"
+                    name="bio"
+                    placeholder="Bio"
+                    defaultValue={user.bio || ""}
+                    className="border rounded px-2 py-1 w-80"
+                  />
+                  <input type="hidden" name="intent" value="update-profile" />
+                  <button
+                    type="submit"
+                    className="bg-purple-800 text-white px-4 py-2 rounded-md ml-2"
+                  >
+                    Save Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Form>
+          <div className="mt-4">
+            <a href="/dashboard" className="text-pink-600">
+              Back to Dashboard
+            </a>
+          </div>
         </div>
       </div>
     </div>
