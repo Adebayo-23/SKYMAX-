@@ -1,7 +1,14 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
+  // Include all app files and public static HTML/JS so Tailwind can
+  // discover all utility class usage in Remix routes and public assets.
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./public/**/*.{html,js}",
+  ],
+  // Use the OS preference by default (the codebase already uses prefers-color-scheme in CSS)
+  darkMode: "media",
   theme: {
     extend: {
       fontFamily: {

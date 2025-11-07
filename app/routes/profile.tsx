@@ -83,25 +83,27 @@ export default function ProfilePage() {
           </p>
         </div>
       </div>
-      {/* Overlapping Card */}
-      <div className="container mx-auto px-4 -mt-12">
+      {/* Overlapping Card - responsive improvements */}
+      <div className="max-w-4xl mx-auto px-4 -mt-16">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <Form method="post" encType="multipart/form-data">
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
               {/* Avatar block */}
-              <div className="w-20 h-20 rounded-md overflow-hidden border border-gray-200">
+              <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
                 <img
                   src={previewImage || user.avatarUrl || "/uploads/default-avatar.png"}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
+
               {/* Text and Inputs */}
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Add a short bio to show on your dashboard
                 </h3>
-                <div className="flex items-center space-x-3 mt-2">
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-3 mt-2">
                   {/* Hidden file input */}
                   <input
                     ref={fileInputRef}
@@ -111,39 +113,49 @@ export default function ProfilePage() {
                     className="hidden"
                     accept="image/*"
                   />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-pink-500 text-white px-3 py-2 rounded-md"
-                  >
-                    Choose File
-                  </button>
-                  <span className="text-gray-500">{selectedFileName}</span>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-pink-500 text-white px-3 py-2 rounded-md"
+                    >
+                      Choose File
+                    </button>
+                    <span className="text-gray-500 text-sm">{selectedFileName}</span>
+                  </div>
+
                   <input
                     type="text"
                     name="username"
                     placeholder="Display name"
                     defaultValue={user.username}
-                    className="border rounded px-2 py-1 w-56"
+                    className="border rounded px-2 py-1 w-full sm:w-56"
                   />
+
                   <input
                     type="text"
                     name="bio"
                     placeholder="Bio"
                     defaultValue={user.bio || ""}
-                    className="border rounded px-2 py-1 w-80"
+                    className="border rounded px-2 py-1 w-full sm:w-80"
                   />
+
                   <input type="hidden" name="intent" value="update-profile" />
-                  <button
-                    type="submit"
-                    className="bg-purple-800 text-white px-4 py-2 rounded-md ml-2"
-                  >
-                    Save Profile
-                  </button>
+
+                  <div>
+                    <button
+                      type="submit"
+                      className="bg-purple-800 text-white px-4 py-2 rounded-md"
+                    >
+                      Save Profile
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </Form>
+
           <div className="mt-4">
             <a href="/dashboard" className="text-pink-600">
               Back to Dashboard
