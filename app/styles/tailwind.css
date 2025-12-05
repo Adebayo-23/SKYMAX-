@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal helpers - keep Tailwind in control of layout */
+html, body {
+  height: 100%;
+}

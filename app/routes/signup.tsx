@@ -64,161 +64,53 @@ export default function SignUp() {
   const [username, setUsername] = useState("");
 
   return (
-    <div
-      className="container"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          fontSize: "24px",
-          fontWeight: "bold",
-          color: "#6c5ce7",
-        }}
-      >
-        SKYMAX
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
+      <div className="absolute top-6 right-6 text-indigo-600 font-semibold tracking-wider">SKYMAX</div>
+
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="text-center py-6 bg-gradient-to-r from-purple-600 to-pink-500">
+            <h2 className="text-white text-lg font-medium">Create your account</h2>
+            <p className="text-purple-100 mt-1 font-semibold text-3xl">Sign Up</p>
+          </div>
+
+          <Form method="post" className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-purple-700">Name</label>
+              <input name="name" className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-purple-700">Username</label>
+              <input name="username" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-purple-700">Email</label>
+              <input name="email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-purple-700">Password</label>
+                <input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-purple-700">Confirm Password</label>
+                <input name="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+              </div>
+            </div>
+
+            {actionData?.error && <p className="text-red-600 text-sm">{actionData.error}</p>}
+
+            <div>
+              <button type="submit" className="w-full py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium shadow">Register</button>
+            </div>
+
+            <p className="text-center text-sm text-gray-500">Already have an account? <Link to="/login" className="text-purple-600 font-semibold">Login</Link></p>
+          </Form>
+        </div>
       </div>
-      <h1
-        style={{
-          color: "#fff",
-          backgroundColor: "#6c5ce7",
-          padding: "10px 20px",
-          borderRadius: "10px",
-          border: "2px solid #D8BFD8",
-          textAlign: "center",
-          fontSize: "24px",
-        }}
-      >
-        Sign Up
-      </h1>
-      <Form
-        method="post"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "20px",
-          border: "1px solid #D8BFD8",
-          borderRadius: "10px",
-          backgroundColor: "#f9f9f9",
-        }}
-      >
-        <label style={{ marginBottom: "10px", color: "#6c5ce7" }}>
-          Name:
-          <input
-            type="text"
-            name="name"
-            style={{
-              display: "block",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        <label style={{ marginBottom: "10px", color: "#6c5ce7" }}>
-          Username:
-          <input
-            type="text"
-            name="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              display: "block",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        <label style={{ marginBottom: "10px", color: "#6c5ce7" }}>
-          Email:
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              display: "block",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        <label style={{ marginBottom: "10px", color: "#6c5ce7" }}>
-          Password:
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              display: "block",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        <label style={{ marginBottom: "10px", color: "#6c5ce7" }}>
-          Confirm Password:
-          <input
-            type="password"
-            name="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            style={{
-              display: "block",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        {actionData?.error && (
-          <p style={{ color: "red", marginBottom: "10px" }}>{actionData.error}</p>
-        )}
-
-        <button
-          type="submit"
-          style={{
-            backgroundColor: "#6c5ce7",
-            color: "#fff",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginBottom: "10px",
-          }}
-        >
-          Register
-        </button>
-
-        <p style={{ marginTop: "0px" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ color: "#6c5ce7" }}>
-            Login
-          </Link>
-        </p>
-      </Form>
     </div>
   );
 }

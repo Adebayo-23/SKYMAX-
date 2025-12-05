@@ -1,5 +1,7 @@
 import type { LinksFunction } from "@remix-run/node";
 import { Meta, Links, Scripts, ScrollRestoration, Outlet, useRouteError, isRouteErrorResponse } from "@remix-run/react";
+import globalStylesUrl from "~/styles/global.css";
+import tailwindStylesUrl from "~/styles/tailwind.css";
 import type { ReactNode } from "react";
 
 export const links: LinksFunction = () => [
@@ -9,8 +11,8 @@ export const links: LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
-  { rel: "stylesheet", href: "/styles/global.css" },
-  { rel: "stylesheet", href: "/styles/tailwind.css" },
+  { rel: "stylesheet", href: globalStylesUrl },
+  { rel: "stylesheet", href: tailwindStylesUrl },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {

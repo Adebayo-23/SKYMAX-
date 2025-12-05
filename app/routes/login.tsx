@@ -66,140 +66,41 @@ export default function Login() {
   }, [actionData]);
 
   return (
-    <div
-      className="container"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "20px",
-        position: "relative",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-      {/* SkyMax Top Right */}
-      <div
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          fontSize: "24px",
-          fontWeight: "bold",
-          color: "#6c5ce7",
-        }}
-      >
-        SKYMAX
+      <div className="absolute top-6 right-6 text-indigo-600 font-semibold tracking-wider">SKYMAX</div>
+
+      <Link to="/" className="absolute top-6 left-6 text-indigo-600"><Home /></Link>
+
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="text-center py-6 bg-gradient-to-r from-purple-600 to-pink-500">
+            <h2 className="text-white text-lg font-medium">Welcome back</h2>
+            <p className="text-purple-100 mt-1 font-semibold text-3xl">Login</p>
+          </div>
+
+          <Form method="post" onSubmit={() => setLoading(true)} className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-purple-700">Username</label>
+              <input name="username" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-purple-700">Password</label>
+              <input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+            </div>
+
+            {actionData?.error && <p className="text-red-600 text-sm">{actionData.error}</p>}
+
+            <button type="submit" disabled={loading} aria-busy={loading ? 'true' : 'false'} className="w-full py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium shadow flex items-center justify-center">
+              {loading ? <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" /> : null}
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+
+            <p className="text-center text-sm text-gray-500">Don&apos;t have an account? <Link to="/signup" className="text-purple-600 font-semibold">Sign Up</Link></p>
+          </Form>
+        </div>
       </div>
-
-      {/* Home Icon */}
-      <Link to="/" style={{ position: "absolute", top: "10px", left: "10px" }}>
-        <Home color="#6c5ce7" size={28} />
-      </Link>
-
-      {/* Login Title */}
-      <h1
-        style={{
-          color: "#fff",
-          backgroundColor: "#6c5ce7",
-          padding: "10px 20px",
-          borderRadius: "10px",
-          border: "2px solid #D8BFD8",
-          textAlign: "center",
-          fontSize: "30px",
-        }}
-      >
-        Login
-      </h1>
-
-      {/* Login Form */}
-      <Form
-        method="post"
-        onSubmit={() => setLoading(true)}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "20px",
-          border: "1px solid #D8BFD8",
-          borderRadius: "10px",
-          backgroundColor: "#f9f9f9",
-          width: "300px",
-        }}
-      >
-        <label style={{ marginBottom: "10px", color: "#6c5ce7", width: "100%" }}>
-          Username:
-          <input
-            type="text"
-            name="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        <label style={{ marginBottom: "10px", color: "#6c5ce7", width: "100%" }}>
-          Password:
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "5px",
-              padding: "10px",
-              border: "1px solid #D8BFD8",
-              borderRadius: "5px",
-            }}
-          />
-        </label>
-
-        {actionData?.error && (
-          <p style={{ color: "red", marginBottom: "10px" }}>{actionData.error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          aria-busy={loading ? 'true' : 'false'}
-          style={{
-            padding: "10px",
-            backgroundColor: "#6c5ce7",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            width: "100%",
-            marginBottom: "10px",
-            cursor: loading ? 'default' : 'pointer',
-            opacity: loading ? 0.8 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {loading ? (
-            <>
-              <span style={{ width: 14, height: 14, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', marginRight: 8, display: 'inline-block', animation: 'spin 1s linear infinite' }} />
-              Logging in...
-            </>
-          ) : (
-            'Login'
-          )}
-        </button>
-
-        {/* Sign Up Link just below button */}
-        <Link to="/signup" style={{ color: "#6c5ce7", fontSize: "14px" }}>
-          Don&apos;t have an account? Sign Up
-        </Link>
-      </Form>
     </div>
   );
 }

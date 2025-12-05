@@ -51,9 +51,9 @@ export default function Dashboard() {
       <h1>Dashboard</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {data.profile.avatarUrl ? (
-          <img src={data.profile.avatarUrl} alt="Profile" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }} />
+          <img src={data.profile.avatarUrl} alt="Profile" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }} />
         ) : (
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>No</div>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f3f3f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>No</div>
         )}
         <p style={{ margin: 0 }}>
           Welcome, <strong>{data.profile.displayName || data.username}</strong>!
