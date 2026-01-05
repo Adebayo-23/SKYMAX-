@@ -4,7 +4,7 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getUsername, getSession, commitSession } from "~/utils/session.server";
 import ScheduleDashboard from "~/components/ScheduleDashboard";
-import { connectDB } from "~/utils/db";
+import { connectDB, isDBAvailable, getInMemoryStore } from "~/utils/db";
 import Task from "~/models/Task";
 import Event from "~/models/Event";
 import User, { IUser } from "~/models/User";
@@ -21,10 +21,26 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!username) return redirect("/login");
 
   await connectDB();
-  const user = (await User.findOne({ username }).lean()) as IUser | null;
-  const userId = user?._id;
-  const tasks = await Task.find({ user: userId }).lean();
-  const events = await Event.find({ user: userId }).lean();
+
+  let user: IUser | null = null;
+  let tasks: any[] = [];
+  let events: any[] = [];
+
+  if (!isDBAvailable()) {
+    // Use in-memory fallback for local development when no MongoDB URI is configured
+    const store = getInMemoryStore();
+    const found = Object.values(store).find(u => u.username === username) || null;
+    if (found) {
+      user = { ...(found as any), _id: `inmemory-${found.username}`, createdAt: new Date() } as unknown as IUser;
+    }
+    tasks = [];
+    events = [];
+  } else {
+    user = (await User.findOne({ username }).lean()) as IUser | null;
+    const userId = user?._id;
+    tasks = await Task.find({ user: userId }).lean();
+    events = await Event.find({ user: userId }).lean();
+  }
 
   const tasksSafe = tasks.map(t => ({ ...t, dueDate: t.dueDate ? t.dueDate.toISOString() : null }));
   const eventsSafe = events.map(e => ({ ...e, date: e.date ? e.date.toISOString() : null }));
