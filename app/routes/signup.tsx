@@ -40,7 +40,9 @@ export const action: ActionFunction = async ({ request }) => {
       if (existing) {
         return json({ error: "Username or email already exists." }, { status: 400 });
       }
-      await User.create({ username, email, password });
+      // Create user with a 30-day free trial period
+      const trialExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await User.create({ username, email, password, trialExpiresAt, isSubscribed: false });
       return redirect("/login");
     }
 
@@ -49,7 +51,8 @@ export const action: ActionFunction = async ({ request }) => {
     if (store[username] || Object.values(store).some(u => u.email === email)) {
       return json({ error: "Username or email already exists." }, { status: 400 });
     }
-    store[username] = { username, email, password, displayName: name || null, bio: null, avatarUrl: null };
+    const trialExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    store[username] = { username, email, password, displayName: name || null, bio: null, avatarUrl: null, isSubscribed: false, trialExpiresAt };
     return redirect("/login");
   } catch (err) {
     return json({ error: "Server error. Please try again." }, { status: 500 });
@@ -72,6 +75,7 @@ export default function SignUp() {
           <div className="text-center py-6 bg-gradient-to-r from-purple-600 to-pink-500">
             <h2 className="text-white text-lg font-medium">Create your account</h2>
             <p className="text-purple-100 mt-1 font-semibold text-3xl">Sign Up</p>
+            <p className="text-purple-50 mt-2 text-sm">Includes a <strong>30-day free trial</strong> — no payment required at signup. You can subscribe anytime from your dashboard.</p>
           </div>
 
           <Form method="post" className="p-6 space-y-4">
@@ -104,7 +108,7 @@ export default function SignUp() {
             {actionData?.error && <p className="text-red-600 text-sm">{actionData.error}</p>}
 
             <div>
-              <button type="submit" className="w-full py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium shadow">Register</button>
+              <button type="submit" className="w-full py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium shadow">Start Free Trial</button>
             </div>
 
             <p className="text-center text-sm text-gray-500">Already have an account? <Link to="/login" className="text-purple-600 font-semibold">Login</Link></p>

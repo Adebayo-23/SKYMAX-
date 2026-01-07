@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { connectDB } from "~/utils/db";
 import { getUsername } from "~/utils/session.server";
-import User from "~/models/User";
+import User, { IUser } from "~/models/User";
 import Task from "~/models/Task";
 import Event from "~/models/Event";
 
@@ -24,7 +24,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const tasksSafe = tasks.map(t => ({ ...t, dueDate: t.dueDate ? t.dueDate.toISOString() : null }));
   const eventsSafe = events.map(e => ({ ...e, date: e.date ? e.date.toISOString() : null }));
 
-  return json({ user: { username: user.username, email: user.email }, tasks: tasksSafe, events: eventsSafe });
+  return json({ user: { username: user.username, email: user.email, isSubscribed: !!user.isSubscribed, subscriptionId: user.subscriptionId || null, trialExpiresAt: user.trialExpiresAt ? user.trialExpiresAt.toISOString() : null }, tasks: tasksSafe, events: eventsSafe });
 };
 
 export const action: ActionFunction = async ({ request }) => {

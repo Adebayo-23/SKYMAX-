@@ -1,11 +1,27 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
+import { connectDB } from "~/utils/db";
+import { getUsername } from "~/utils/session.server";
+import User from "~/models/User";
 
-export const loader: LoaderFunction = async () => {
+export const loader: LoaderFunction = async ({ request }) => {
+  await connectDB();
+  const username = await getUsername(request);
+  let trialDaysLeft = null as number | null;
+  if (username) {
+    const u = await User.findOne({ username }).lean();
+    if (u && u.trialExpiresAt) {
+      const expires = new Date(u.trialExpiresAt).getTime();
+      const now = Date.now();
+      const diff = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+      trialDaysLeft = diff > 0 ? diff : 0;
+    }
+  }
   return json({
     title: "SKYMAX",
     subtitle: "Manage Your Schedule Smartly",
+    trialDaysLeft,
   });
 };
 
@@ -33,6 +49,15 @@ export default function Index() {
               <button className="px-6 py-3 rounded-md bg-pink-500 hover:bg-pink-600 text-white font-medium shadow-md">Login</button>
             </Link>
           </div>
+          {data.trialDaysLeft !== null ? (
+            <div className="mt-6 text-sm text-yellow-100">
+              You have <strong>{data.trialDaysLeft}</strong> day(s) left in your free trial. <Link to="/subscribe" className="underline font-semibold">Subscribe now</Link> to continue uninterrupted.
+            </div>
+          ) : (
+            <div className="mt-6 text-sm text-white/90">
+              New here? Enjoy a <strong>30-day free trial</strong> when you sign up. <Link to="/signup" className="underline font-semibold">Create an account</Link> to get started.
+            </div>
+          )}
         </div>
       </section>
 

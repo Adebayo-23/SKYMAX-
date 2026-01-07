@@ -8,6 +8,10 @@ export interface IUser extends Document {
   bio?: string;
   avatarUrl?: string;
   createdAt: Date;
+  // Subscription fields
+  isSubscribed?: boolean;
+  subscriptionId?: string | null;
+  trialExpiresAt?: Date | null;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -18,6 +22,10 @@ const UserSchema = new Schema<IUser>({
   bio: { type: String },
   avatarUrl: { type: String },
   createdAt: { type: Date, default: Date.now },
+  // Subscription metadata
+  isSubscribed: { type: Boolean, default: false },
+  subscriptionId: { type: String, default: null },
+  trialExpiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
 });
 
 export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
