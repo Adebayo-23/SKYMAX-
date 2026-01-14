@@ -1,6 +1,8 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  # For Remix + Vite the client assets are output to `build/client`.
+  # Netlify should publish that folder so static assets and the SPA entry are available.
+  publish = "build/client"
 
 [[redirects]]
   from = "/*"
