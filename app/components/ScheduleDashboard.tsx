@@ -5,7 +5,8 @@ interface Task {
 	title: string;
 	completed: boolean;
 	priority: "low" | "medium" | "high";
-	dueDate: Date;
+	// incoming dueDate may be a string (from loader) or a Date (client-side)
+	dueDate: string | Date | null;
 	category: string;
 }
 
@@ -23,16 +24,20 @@ const ScheduleDashboard: React.FC<ScheduleDashboardProps> = ({ tasks }) => {
 	});
 	const [taskList, setTaskList] = useState<Task[]>(tasks);
 
+	let idCounter = 0;
 	const handleAddTask = () => {
 		if (!newTask.title.trim()) return;
+		const generatedId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+			? (crypto as any).randomUUID()
+			: `id-${Date.now()}-${idCounter++}`;
 		setTaskList([
 			...taskList,
 			{
-				id: Math.random().toString(),
+				id: generatedId,
 				title: newTask.title,
 				completed: false,
 				priority: newTask.priority,
-				dueDate: newTask.dueDate ? new Date(newTask.dueDate) : new Date(),
+				dueDate: newTask.dueDate || null,
 				category: newTask.category
 			}
 		]);

@@ -90,7 +90,7 @@ export default function Dashboard() {
         {/* cast each item to a known shape for TS */}
         <ScheduleDashboard tasks={data.tasks.map((t) => {
           const it = t as unknown as { _id: unknown; title: string; completed: boolean; priority?: string; dueDate?: string | null; category?: string };
-          return { id: String(it._id), title: it.title, completed: it.completed, priority: (it.priority || 'medium') as 'low' | 'medium' | 'high', dueDate: it.dueDate ? new Date(it.dueDate) : new Date(), category: it.category || 'General' };
+          return { id: String(it._id), title: it.title, completed: it.completed, priority: (it.priority || 'medium') as 'low' | 'medium' | 'high', dueDate: it.dueDate || null, category: it.category || 'General' };
         })} />
       </div>
     </div>
