@@ -1,10 +1,9 @@
 [build]
   command = "npm run build"
-  # For Remix + Vite the client assets are output to `build/client`.
-  # Netlify should publish that folder so static assets and the SPA entry are available.
+  functions = "netlify/functions"
   publish = "build/client"
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/server"
   status = 200
