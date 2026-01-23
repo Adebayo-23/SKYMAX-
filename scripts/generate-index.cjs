@@ -14,8 +14,14 @@ const files = fs.readdirSync(assetsDir);
 const cssFiles = files.filter(f => f.endsWith(".css"));
 const jsFiles = files.filter(f => f.endsWith(".js"));
 
-// Prefer including manifest, entry.client and index bundles first if present
-const preferOrder = [f => f.startsWith("manifest"), f => f.startsWith("entry.client"), f => f.startsWith("index")];
+// Prefer including manifest, entry.client, index and root bundles first if present
+const preferOrder = [
+  f => f.startsWith("manifest"),
+  f => f.startsWith("entry.client"),
+  f => f.startsWith("index"),
+  // ensure root route module is included before large component bundles
+  f => f.startsWith("root"),
+];
 const orderedJs = [];
 const remainingJs = jsFiles.slice();
 preferOrder.forEach(pred => {
@@ -27,9 +33,26 @@ orderedJs.push(...remainingJs);
 const links = cssFiles.map(f => `  <link rel="stylesheet" href="assets/${f}">`).join("\n");
 // Inline pre-init script to defensively create Remix runtime globals before
 // any deferred module scripts execute. This avoids race conditions where
-// compiled bundles try to read `window.__remixManifest` or
-// `window.__remixContext` before the manifest script has run.
-const preinitScript = `  <script>window.__remixContext = window.__remixContext || {}; window.__remixContext.future = window.__remixContext.future || {}; window.__remixManifest = window.__remixManifest || {};</script>`;
+// compiled bundles try to read `window.__remixManifest` or `window.__remixContext`
+// before the manifest script has run. We also provide minimal no-op helpers
+// that Remix runtime may call early (p, n, r) to avoid `undefined` reads.
+const preinitScript = [
+  '  <script>',
+  '/* Remix runtime pre-init shim */(function(){try{',
+  "window.__remixContext=window.__remixContext||{};",
+  "window.__remixContext.future=window.__remixContext.future||{};",
+  "window.__remixContext.state=window.__remixContext.state||{loaderData:{}};",
+  "window.__remixContext.p=window.__remixContext.p||function(){return Promise.resolve()};",
+  "window.__remixContext.n=window.__remixContext.n||function(){return Promise.resolve()};",
+  "window.__remixContext.r=window.__remixContext.r||function(){};",
+  "window.__remixRouteModules=window.__remixRouteModules||{};",
+  "/* ensure a minimal root module exists to avoid early reads of undefined */",
+  "window.__remixRouteModules.root=window.__remixRouteModules.root||{};",
+  "window.__remixManifest=window.__remixManifest||{};",
+  "window.__remixManifest.routes=window.__remixManifest.routes||{};",
+  "}catch(e){} })();",
+  '</script>'
+].join('');
 
 const scripts = [preinitScript]
   .concat(orderedJs.map(f => `  <script type="module" src="assets/${f}" defer></script>`))
