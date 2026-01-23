@@ -22,10 +22,10 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
-        {/* Ensure runtime remix context has a `future` object to avoid undefined reads during hydration/runtime */}
+        {/* Ensure runtime remix context and route/manifest globals exist to avoid undefined reads during hydration/runtime */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.__remixContext = window.__remixContext || {}; window.__remixContext.future = window.__remixContext.future || {};`,
+            __html: `window.__remixContext = window.__remixContext || {}; window.__remixContext.future = window.__remixContext.future || {}; window.__remixRouteModules = window.__remixRouteModules || {}; window.__remixManifest = window.__remixManifest || window.__remixManifest || {};`,
           }}
         />
         <Links />

@@ -25,7 +25,15 @@ preferOrder.forEach(pred => {
 orderedJs.push(...remainingJs);
 
 const links = cssFiles.map(f => `  <link rel="stylesheet" href="assets/${f}">`).join("\n");
-const scripts = orderedJs.map(f => `  <script type="module" src="assets/${f}" defer></script>`).join("\n");
+// Inline pre-init script to defensively create Remix runtime globals before
+// any deferred module scripts execute. This avoids race conditions where
+// compiled bundles try to read `window.__remixManifest` or
+// `window.__remixContext` before the manifest script has run.
+const preinitScript = `  <script>window.__remixContext = window.__remixContext || {}; window.__remixContext.future = window.__remixContext.future || {}; window.__remixManifest = window.__remixManifest || {};</script>`;
+
+const scripts = [preinitScript]
+  .concat(orderedJs.map(f => `  <script type="module" src="assets/${f}" defer></script>`))
+  .join("\n");
 
 const html = `<!doctype html>
 <html lang="en">
