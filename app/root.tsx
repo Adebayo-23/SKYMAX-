@@ -106,7 +106,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
         </head>
         <body style={{ padding: 24, fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
           <h1>{status} {statusText}</h1>
-          <pre style={{ whiteSpace: 'pre-wrap', background: '#fff6f6', padding: 12, borderRadius: 6 }}>
+          <pre style={{ whiteSpace: 'pre-wrap', background: '#e01818', padding: 12, borderRadius: 6 }}>
             {JSON.stringify(data, null, 2)}
           </pre>
           <Scripts />

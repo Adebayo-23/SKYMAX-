@@ -1,23 +1,29 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { connectDB } from "~/utils/db";
 import { getUsername } from "~/utils/session.server";
 import User from "~/models/User";
 
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   await connectDB();
+
   const username = await getUsername(request);
-  let trialDaysLeft = null as number | null;
+  let trialDaysLeft: number | null = null;
+
   if (username) {
-    const u = await User.findOne({ username }).lean();
-    if (u && u.trialExpiresAt) {
+    const u = await User.findOne({ username }).lean<{
+      trialExpiresAt?: Date;
+    }>();
+
+    if (u?.trialExpiresAt) {
       const expires = new Date(u.trialExpiresAt).getTime();
       const now = Date.now();
       const diff = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
       trialDaysLeft = diff > 0 ? diff : 0;
     }
   }
+
   return json({
     title: "SKYMAX",
     subtitle: "Manage Your Schedule Smartly",
@@ -64,7 +70,7 @@ export default function Index() {
       {/* Quote area */}
       <section className="w-full bg-gradient-to-t from-gray-100 via-gray-300 to-black/0 py-20 flex items-center">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-2xl md:text-3xl italic text-gray-700 max-w-3xl mx-auto mb-6">"Productivity is being able to do things that you were not able to do before."</p>
+          <p className="text-2xl md:text-3xl italic text-gray-700 max-w-3xl mx-auto mb-6">&quot;Productivity is being able to do things that you were not able to do before."</p>
           <p className="text-lg text-gray-600">- Franz Kafka</p>
         </div>
       </section>
