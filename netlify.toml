@@ -4,6 +4,25 @@
   publish = "build/client"
 
 [[redirects]]
+  # Serve generated static assets directly from the publish folder
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  # Serve CSS and other build styles directly
+  from = "/styles/*"
+  to = "/styles/:splat"
+  status = 200
+
+[[redirects]]
+  # Serve uploads (if any) directly
+  from = "/uploads/*"
+  to = "/uploads/:splat"
+  status = 200
+
+[[redirects]]
+  # Fallback: route everything else to the server function
   from = "/*"
   to = "/.netlify/functions/server"
   status = 200
