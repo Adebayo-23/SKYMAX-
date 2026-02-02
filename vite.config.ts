@@ -9,6 +9,7 @@ declare module "@remix-run/node" {
 }
 
 export default defineConfig({
+  base: '/',
   plugins: [
     remix({
       future: {
@@ -35,5 +36,3 @@ export default defineConfig({
   },
 });
 
-// entry.server.ts
-import "dotenv/config";
