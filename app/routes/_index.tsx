@@ -70,7 +70,7 @@ export default function Index() {
       {/* Quote area */}
       <section className="w-full bg-gradient-to-t from-gray-100 via-gray-300 to-black/0 py-20 flex items-center">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-2xl md:text-3xl italic text-gray-700 max-w-3xl mx-auto mb-6">&quot;Productivity is being able to do things that you were not able to do before."</p>
+          <p className="text-2xl md:text-3xl italic text-gray-700 max-w-3xl mx-auto mb-6">{`“Productivity is being able to do things that you were not able to do before.”`}</p>
           <p className="text-lg text-gray-600">- Franz Kafka</p>
         </div>
       </section>
