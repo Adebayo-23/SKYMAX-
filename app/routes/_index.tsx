@@ -37,22 +37,22 @@ export default function Index() {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Hero */}
-      <section className="w-full bg-gradient-to-b from-purple-800 via-purple-900 to-black text-white py-24">
+      <section className="w-full bg-gradient-to-b from-purple-800 via-purple-900 to-black text-white min-h-[70vh] flex items-center py-24">
         <div className="container mx-auto px-4 text-center relative">
-          <div className="absolute top-6 left-6 text-sm font-semibold tracking-widest opacity-90">
+          <div className="absolute top-8 left-8 text-sm font-semibold tracking-widest text-white/90">
             {data.title}
           </div>
 
           <h2 className="text-sm uppercase tracking-widest mb-4">{data.title}</h2>
-          <h1 className="text-6xl md:text-7xl font-extrabold mb-6">{data.title}</h1>
-          <p className="text-xl md:text-2xl mb-8">{data.subtitle}</p>
+          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-extrabold mb-6 leading-tight">{data.title}</h1>
+          <p className="text-lg md:text-2xl mb-10 text-white/90">{data.subtitle}</p>
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-6 mt-2">
             <Link to="/signup" className="inline-block">
-              <button className="px-6 py-3 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-md">Sign Up</button>
+              <button className="px-8 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-lg">Sign Up</button>
             </Link>
             <Link to="/login" className="inline-block">
-              <button className="px-6 py-3 rounded-md bg-pink-500 hover:bg-pink-600 text-white font-medium shadow-md">Login</button>
+              <button className="px-8 py-3 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-medium shadow-lg">Login</button>
             </Link>
           </div>
           {data.trialDaysLeft !== null ? (
