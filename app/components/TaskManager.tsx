@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useIsClient from '../hooks/useIsClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -26,6 +27,7 @@ interface TaskManagerProps {
 }
 
 export function TaskManager({ tasks, onAddTask, onToggleTask }: TaskManagerProps) {
+  const isClient = useIsClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
@@ -267,7 +269,7 @@ export function TaskManager({ tasks, onAddTask, onToggleTask }: TaskManagerProps
                       {task.category}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      Due: {task.dueDate.toLocaleDateString()}
+                      Due: {isClient ? task.dueDate.toLocaleDateString() : task.dueDate.toISOString().slice(0,10)}
                     </span>
                   </div>
                 </div>

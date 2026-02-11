@@ -1,4 +1,5 @@
 import React from 'react';
+import useIsClient from '../../hooks/useIsClient';
 
 // Omit the DOM onSelect attribute from HTMLAttributes so our `onSelect` prop
 // can be typed as (date: Date) => void without colliding with the native
@@ -6,10 +7,14 @@ import React from 'react';
 type CalendarProps = { selected: Date; onSelect: (date: Date) => void } & Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'>;
 
 export function Calendar({ selected, onSelect, ...props }: CalendarProps) {
-  // Placeholder calendar: just shows today's date and a button to select it
+  const isClient = useIsClient();
+
+  // Placeholder calendar: shows selected date (ISO on server, localized on client)
   return (
     <div {...props}>
-      <div className="mb-2">Selected: {selected.toLocaleDateString()}</div>
+      <div className="mb-2">
+        Selected: {selected ? (isClient ? selected.toLocaleDateString() : selected.toISOString().slice(0, 10)) : 'None'}
+      </div>
       <button className="px-2 py-1 bg-gray-200 rounded" onClick={() => onSelect(new Date())}>Select Today</button>
     </div>
   );

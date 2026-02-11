@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import useIsClient from '../hooks/useIsClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -24,6 +25,7 @@ interface ScheduleManagerProps {
 
 export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const isClient = useIsClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -141,7 +143,7 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
             <DialogHeader>
               <DialogTitle>Add New Event</DialogTitle>
                 <DialogDescription>
-                  Schedule a new event for {selectedDate ? selectedDate.toLocaleDateString() : '...'}.
+                  Schedule a new event for {selectedDate ? (isClient ? selectedDate.toLocaleDateString() : selectedDate.toISOString().slice(0,10)) : '...'}.
                 </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -217,7 +219,7 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Events for {selectedDate ? selectedDate.toLocaleDateString() : '...'}
+              Events for {selectedDate ? (isClient ? selectedDate.toLocaleDateString() : selectedDate.toISOString().slice(0,10)) : '...'}
             </CardTitle>
             <CardDescription>
               {selectedDateEvents.length} event(s) scheduled
@@ -268,7 +270,7 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
                   <p className="text-sm">{event.title}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs text-muted-foreground">
-                      {event.date.toLocaleDateString()} at {event.time}
+                      {isClient ? event.date.toLocaleDateString() : event.date.toISOString().slice(0,10)} at {event.time}
                     </span>
                     <Badge variant={getEventTypeBadge(event.type) as 'default' | 'secondary' | 'outline' | 'destructive'} className="text-xs">
                       {event.type}
