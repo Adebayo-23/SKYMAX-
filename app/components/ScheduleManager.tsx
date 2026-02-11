@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -23,7 +23,7 @@ interface ScheduleManagerProps {
 }
 
 export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -52,7 +52,8 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
     setIsAddDialogOpen(false);
   };
 
-  const getEventsForDate = (date: Date) => {
+  const getEventsForDate = (date: Date | null) => {
+    if (!date) return [] as Event[];
     return events.filter(event => 
       event.date.toDateString() === date.toDateString()
     ).sort((a, b) => a.time.localeCompare(b.time));
@@ -80,24 +81,45 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
     }
   };
 
-  // Get upcoming events (next 7 days)
-  const getUpcomingEvents = () => {
-    const today = new Date();
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    return events
-      .filter(event => event.date >= today && event.date <= nextWeek)
-      .sort((a, b) => {
-        const dateCompare = a.date.getTime() - b.date.getTime();
-        if (dateCompare === 0) {
-          return a.time.localeCompare(b.time);
-        }
-        return dateCompare;
-      })
-      .slice(0, 5);
-  };
+  // Compute upcoming events on the client to avoid SSR/client mismatches
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
 
-  const upcomingEvents = getUpcomingEvents();
+  useEffect(() => {
+    if (!selectedDate) {
+      // compute based on now
+      const today = new Date();
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const upcoming = events
+        .filter(event => event.date >= today && event.date <= nextWeek)
+        .sort((a, b) => {
+          const dateCompare = a.date.getTime() - b.date.getTime();
+          if (dateCompare === 0) {
+            return a.time.localeCompare(b.time);
+          }
+          return dateCompare;
+        })
+        .slice(0, 5);
+      setUpcomingEvents(upcoming);
+    } else {
+      const today = new Date();
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const upcoming = events
+        .filter(event => event.date >= today && event.date <= nextWeek)
+        .sort((a, b) => {
+          const dateCompare = a.date.getTime() - b.date.getTime();
+          if (dateCompare === 0) {
+            return a.time.localeCompare(b.time);
+          }
+          return dateCompare;
+        })
+        .slice(0, 5);
+      setUpcomingEvents(upcoming);
+    }
+  }, [events, selectedDate]);
+
+  useEffect(() => {
+    if (!selectedDate) setSelectedDate(new Date());
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -118,9 +140,9 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Event</DialogTitle>
-              <DialogDescription>
-                Schedule a new event for {selectedDate.toLocaleDateString()}.
-              </DialogDescription>
+                <DialogDescription>
+                  Schedule a new event for {selectedDate ? selectedDate.toLocaleDateString() : '...'}.
+                </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -195,7 +217,7 @@ export function ScheduleManager({ events, onAddEvent }: ScheduleManagerProps) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Events for {selectedDate.toLocaleDateString()}
+              Events for {selectedDate ? selectedDate.toLocaleDateString() : '...'}
             </CardTitle>
             <CardDescription>
               {selectedDateEvents.length} event(s) scheduled
