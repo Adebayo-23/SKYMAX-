@@ -8,3 +8,15 @@ html, body {
 }
 
 /* Keep this file minimal so Tailwind utilities apply predictably. */
+
+/* Fallbacks: ensure basic layout utilities still work if Tailwind output
+  fails to load for any reason (helps avoid unstyled layout during debugging).
+  These rules are intentionally minimal and will be overridden by Tailwind
+  when its stylesheet is present. */
+.flex { display: flex !important; }
+.flex-inline { display: inline-flex !important; }
+.flex-col { flex-direction: column !important; }
+.items-center { align-items: center !important; }
+.justify-center { justify-content: center !important; }
+.w-full { width: 100% !important; }
+.min-h-screen { min-height: 100vh !important; }
