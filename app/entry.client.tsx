@@ -7,6 +7,7 @@
 import { RemixBrowser } from "@remix-run/react";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
+import ClientErrorBoundary from "./components/ClientErrorBoundary";
 
 // Defensive hydration: ensure the remix context `future` object exists
 if (typeof window !== "undefined") {
@@ -21,10 +22,15 @@ if (typeof window !== "undefined") {
 
 try {
   startTransition(() => {
+    const container = document.getElementById("root") || document;
     hydrateRoot(
-      document,
+      // Prefer hydrating the explicit root container when present to avoid
+      // any surprises with document-wide hydration mismatches.
+      container as unknown as Element,
       <StrictMode>
-        <RemixBrowser />
+        <ClientErrorBoundary>
+          <RemixBrowser />
+        </ClientErrorBoundary>
       </StrictMode>
     );
   });
