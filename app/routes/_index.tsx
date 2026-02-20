@@ -39,13 +39,13 @@ export default function Index() {
       {/* Hero */}
       <section className="w-full bg-gradient-to-b from-purple-800 via-purple-900 to-black text-white min-h-[70vh] flex items-center py-24">
         <div className="container mx-auto px-4 text-center relative">
-          <div className="absolute top-8 left-8 text-sm font-semibold tracking-widest text-white/90">
+          <div className="absolute top-8 left-8 text-sm font-semibold tracking-widest text-white/90 hero-brand">
             {data.title}
           </div>
 
-          <h2 className="text-sm uppercase tracking-widest mb-4">{data.title}</h2>
-          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-extrabold mb-6 leading-tight">{data.title}</h1>
-          <p className="text-lg md:text-2xl mb-10 text-white/90">{data.subtitle}</p>
+          <h2 className="text-sm uppercase tracking-widest mb-4 hero-title-small">{data.title}</h2>
+          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-extrabold mb-6 leading-tight hero-title">{data.title}</h1>
+          <p className="text-lg md:text-2xl mb-10 text-white/90 hero-subtitle">{data.subtitle}</p>
 
           <div className="flex items-center justify-center gap-6 mt-2">
             <Link to="/signup" className="inline-block">
