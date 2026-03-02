@@ -191,7 +191,7 @@ export default function ProfilePage() {
                     className="border rounded px-2 py-1 w-full sm:w-80"
                   />
 
-                  <input type="hidden" name="intent" value="update-profile" />
+                  <input type="hidden" name="intent" defaultValue="update-profile" readOnly />
 
                   <div>
                     <button

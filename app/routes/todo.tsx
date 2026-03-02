@@ -89,7 +89,7 @@ export default function TodoPage() {
                 <div className="flex gap-2">
                   {!task.completed && (
                     <Form method="post">
-                      <input type="hidden" name="id" value={task._id} />
+                      <input type="hidden" name="id" defaultValue={task._id} readOnly />
                       <button
                         type="submit"
                         name="_action"
@@ -101,7 +101,7 @@ export default function TodoPage() {
                     </Form>
                   )}
                   <Form method="post">
-                    <input type="hidden" name="id" value={task._id} />
+                    <input type="hidden" name="id" defaultValue={task._id} readOnly />
                     <button
                       type="submit"
                       name="_action"
