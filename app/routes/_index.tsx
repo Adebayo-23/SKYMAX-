@@ -38,14 +38,38 @@ export default function Index() {
     <main className="min-h-screen flex flex-col">
       {/* Hero */}
       <section className="w-full bg-gradient-to-b from-purple-800 via-purple-900 to-black text-white min-h-[70vh] flex items-center py-24">
-        <div className="container mx-auto px-4 text-center relative">
-          <div className="absolute top-8 left-8 text-sm font-semibold tracking-widest text-white hero-brand">
-            {data.title}
+        <div className="container mx-auto px-4 text-center">
+          {/* always-visible brand label (simple text, no positioning) */}
+          <div
+            className="text-sm font-semibold tracking-widest mb-2"
+            style={{ color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+          >
+            {data.title || 'SKYMAX'}
           </div>
-
-          <h2 className="text-sm uppercase tracking-widest mb-4 hero-title-small">{data.title}</h2>
-          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-extrabold mb-6 leading-tight hero-title">{data.title}</h1>
-          <p className="text-lg md:text-2xl mb-10 text-white hero-subtitle">{data.subtitle}</p>
+          {/* fallback defaults guard against any missing loader data */}
+          {/**
+           * Title and subtitle are styled with both Tailwind and inline fallbacks
+           * so they remain visible even if utility classes are purged or fail.
+           */}
+          {/**/}
+          <h2
+            className="text-sm uppercase tracking-widest mb-4 hero-title-small"
+            style={{ color: 'white', textShadow: '0 4px 16px rgba(0,0,0,0.4)' }}
+          >
+            {data.title || 'SKYMAX'}
+          </h2>
+          <h1
+            className="text-6xl md:text-8xl lg:text-[10rem] font-extrabold mb-6 leading-tight hero-title"
+            style={{ color: 'white', textShadow: '0 6px 20px rgba(0,0,0,0.5)' }}
+          >
+            {data.title || 'SKYMAX'}
+          </h1>
+          <p
+            className="text-lg md:text-2xl mb-10 text-white hero-subtitle"
+            style={{ color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+          >
+            {data.subtitle || 'Manage Your Schedule Smartly'}
+          </p>
 
           <div className="flex items-center justify-center gap-6 mt-2">
             <Link to="/signup" className="inline-block">
@@ -60,7 +84,7 @@ export default function Index() {
               You have <strong>{data.trialDaysLeft}</strong> day(s) left in your free trial. <Link to="/subscribe" className="underline font-semibold">Subscribe now</Link> to continue uninterrupted.
             </div>
           ) : (
-            <div className="mt-6 text-sm text-white/90">
+            <div className="mt-6 text-sm text-white">
               New here? Enjoy a <strong>30-day free trial</strong> when you sign up. <Link to="/signup" className="underline font-semibold">Create an account</Link> to get started.
             </div>
           )}
