@@ -81,13 +81,13 @@ export default function Login() {
 
           <Form method="post" onSubmit={() => setLoading(true)} className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-purple-700">Username</label>
-              <input name="username" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+              <label htmlFor="username" className="block text-sm font-medium text-purple-700">Username</label>
+              <input id="username" name="username" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-purple-700">Password</label>
-              <input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
+              <label htmlFor="password" className="block text-sm font-medium text-purple-700">Password</label>
+              <input id="password" name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full border border-purple-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-300" />
               <div className="text-right mt-2">
                 <Link to="/forgot-password" className="text-sm text-purple-600 font-semibold hover:text-purple-800">Forgot password?</Link>
               </div>

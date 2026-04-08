@@ -164,11 +164,12 @@ export default function ResetPassword() {
               <input type="hidden" name="token" value={token} />
 
               <div>
-                <label className="block text-sm font-medium text-purple-700">
+                <label htmlFor="password" className="block text-sm font-medium text-purple-700">
                   New Password
                 </label>
                 <div className="relative mt-1">
                   <input
+                    id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="At least 8 chars, 1 uppercase, 1 symbol"
@@ -191,10 +192,11 @@ export default function ResetPassword() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-purple-700">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-purple-700">
                   Confirm Password
                 </label>
                 <input
+                  id="confirmPassword"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
                   placeholder="Confirm your password"

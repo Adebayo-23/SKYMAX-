@@ -1,3 +1,4 @@
+// @ts-ignore - nodemailer types not available, but package is installed
 import nodemailer from 'nodemailer';
 
 // Email configuration - configure these via environment variables

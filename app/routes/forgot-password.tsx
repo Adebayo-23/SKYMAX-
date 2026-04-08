@@ -88,14 +88,15 @@ export default function ForgotPassword() {
           {!submitted ? (
             <Form method="post" onSubmit={() => setLoading(true)} className="p-6 space-y-4">
               <p className="text-sm text-gray-600 mb-4">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </p>
 
               <div>
-                <label className="block text-sm font-medium text-purple-700">
+                <label htmlFor="email" className="block text-sm font-medium text-purple-700">
                   Email Address
                 </label>
                 <input
+                  id="email"
                   name="email"
                   type="email"
                   placeholder="you@example.com"
@@ -138,13 +139,13 @@ export default function ForgotPassword() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="text-green-800 font-semibold mb-2">Check your email!</h3>
                 <p className="text-green-700 text-sm">
-                  We've sent a password reset link to <strong>{email}</strong>. 
+                  We&apos;ve sent a password reset link to <strong>{email}</strong>. 
                   The link will expire in 1 hour.
                 </p>
               </div>
 
               <p className="text-sm text-gray-600">
-                Check your spam or junk folder if you don't see the email in your inbox.
+                Check your spam or junk folder if you don&apos;t see the email in your inbox.
               </p>
 
               <Link
