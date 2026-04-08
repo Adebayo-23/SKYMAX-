@@ -12,6 +12,9 @@ export interface IUser extends Document {
   isSubscribed?: boolean;
   subscriptionId?: string | null;
   trialExpiresAt?: Date | null;
+  // Password reset fields
+  resetToken?: string | null;
+  resetTokenExpiry?: Date | null;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -26,6 +29,9 @@ const UserSchema = new Schema<IUser>({
   isSubscribed: { type: Boolean, default: false },
   subscriptionId: { type: String, default: null },
   trialExpiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+  // Password reset fields
+  resetToken: { type: String, default: null },
+  resetTokenExpiry: { type: Date, default: null },
 });
 
 export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
