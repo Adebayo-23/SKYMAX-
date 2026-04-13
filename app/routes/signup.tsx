@@ -31,6 +31,8 @@ export const action: ActionFunction = async ({ request }) => {
   // Connect to DB and create user
   try {
     const { connectDB, isDBAvailable, getInMemoryStore } = await import("~/utils/db");
+    const { hashPassword } = await import("~/utils/password.server");
+    
     await connectDB();
     if (isDBAvailable()) {
       const User = (await import("~/models/User")).default;
@@ -40,9 +42,13 @@ export const action: ActionFunction = async ({ request }) => {
       if (existing) {
         return json({ error: "Username or email already exists." }, { status: 400 });
       }
+      
+      // Hash password before saving
+      const hashedPassword = await hashPassword(password);
+      
       // Create user with a 30-day free trial period
       const trialExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await User.create({ username, email, password, trialExpiresAt, isSubscribed: false });
+      await User.create({ username, email, password: hashedPassword, trialExpiresAt, isSubscribed: false });
       return redirect("/login");
     }
 
@@ -51,10 +57,15 @@ export const action: ActionFunction = async ({ request }) => {
     if (store[username] || Object.values(store).some(u => u.email === email)) {
       return json({ error: "Username or email already exists." }, { status: 400 });
     }
+    
+    // Hash password before storing
+    const hashedPassword = await hashPassword(password);
+    
     const trialExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    store[username] = { username, email, password, displayName: name || null, bio: null, avatarUrl: null, isSubscribed: false, trialExpiresAt };
+    store[username] = { username, email, password: hashedPassword, displayName: name || null, bio: null, avatarUrl: null, isSubscribed: false, trialExpiresAt };
     return redirect("/login");
   } catch (err) {
+    console.error("[signup] Error:", err);
     return json({ error: "Server error. Please try again." }, { status: 500 });
   }
 };

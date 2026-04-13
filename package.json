@@ -16,6 +16,7 @@
     "@remix-run/node": "^2.16.8",
     "@remix-run/react": "^2.16.8",
     "@remix-run/serve": "^2.16.8",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.5.0",
     "isbot": "^4.1.0",
     "lucide-react": "^0.522.0",

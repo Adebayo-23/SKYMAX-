@@ -4,6 +4,7 @@ import { connectDB, isDBAvailable } from "~/utils/db";
 import User from "~/models/User";
 import { isTokenValid } from "~/utils/token.server";
 import { sendPasswordResetSuccessEmail } from "~/utils/email.server";
+import { hashPassword } from "~/utils/password.server";
 
 const passwordRegex =
   /^(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
@@ -88,8 +89,11 @@ export const action: ActionFunction = async ({ request }) => {
       );
     }
 
+    // Hash new password before saving
+    const hashedPassword = await hashPassword(newPassword);
+    
     // Update password and clear reset token
-    user.password = newPassword;
+    user.password = hashedPassword;
     user.resetToken = null;
     user.resetTokenExpiry = null;
     await user.save();

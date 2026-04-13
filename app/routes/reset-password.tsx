@@ -65,11 +65,17 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const actionData = useActionData<typeof action>();
 
-  const token = searchParams.get("token");
+  const [token, setToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Extract token only on client-side to avoid hydration mismatch
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get("token");
+    setToken(tokenFromUrl);
+  }, [searchParams]);
 
   useEffect(() => {
     if (actionData?.error) {

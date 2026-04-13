@@ -95,7 +95,13 @@ export const action: ActionFunction = async ({ request }) => {
       { status: 200 }
     );
   } catch (err) {
-    console.error("[forgot-password] Unexpected error:", err);
+    console.error("[forgot-password] 🔥 FULL ERROR:", err);
+    console.error("[forgot-password] Error details:", {
+      type: err instanceof Error ? err.constructor.name : typeof err,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
+    
     const message =
       err && typeof err === "object" && "message" in err
         ? (err as { message?: unknown }).message

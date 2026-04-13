@@ -6,6 +6,7 @@ import { Home } from "lucide-react";
 import { createUserSession } from "~/utils/session.server";
 import { connectDB, isDBAvailable } from "~/utils/db";
 import User from "~/models/User";
+import { comparePasswords } from "~/utils/password.server";
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
@@ -30,8 +31,15 @@ export const action: ActionFunction = async ({ request }) => {
         return un === usernameLower || em === usernameLower;
       });
       console.log('[login] Using in-memory store. username:', username, 'found:', !!existing);
-      if (!existing || existing.password !== password) {
-        console.warn('[login] Invalid credentials for user (in-memory):', username);
+      if (!existing) {
+        console.warn('[login] User not found (in-memory):', username);
+        return json({ error: "Invalid username or password." }, { status: 401 });
+      }
+      
+      // Compare hashed password
+      const passwordMatch = await comparePasswords(password, existing.password || '');
+      if (!passwordMatch) {
+        console.warn('[login] Invalid password for user (in-memory):', username);
         return json({ error: "Invalid username or password." }, { status: 401 });
       }
       return createUserSession(existing.username, "/dashboard");
@@ -41,15 +49,27 @@ export const action: ActionFunction = async ({ request }) => {
     const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const user = await User.findOne({ username: { $regex: `^${escapeRegex(username)}$`, $options: 'i' } }).exec();
     console.log('[login] DB lookup. username:', username, 'found:', !!user);
-    if (!user || user.password !== password) {
-      console.warn('[login] Invalid credentials for user (db):', username);
+    if (!user) {
+      console.warn('[login] User not found (db):', username);
       return json({ error: "Invalid username or password." }, { status: 401 });
     }
+    
+    // Compare hashed password
+    const passwordMatch = await comparePasswords(password, user.password);
+    if (!passwordMatch) {
+      console.warn('[login] Invalid password for user (db):', username);
+      return json({ error: "Invalid username or password." }, { status: 401 });
+    }
+    
     // create a session storing the username and redirect to dashboard
     return createUserSession(user.username, "/dashboard");
   } catch (err) {
     // Log the error to the server console for debugging
-    console.error('[action] Unexpected error in /login action:', err);
+    console.error('[login] 🔥 FULL ERROR:', err);
+    console.error('[login] Error details:', {
+      type: err instanceof Error ? err.constructor.name : typeof err,
+      message: err instanceof Error ? err.message : String(err),
+    });
     const message = err && typeof err === 'object' && 'message' in err ? (err as { message?: unknown }).message : 'Server error. Please try again.';
     return json({ error: typeof message === 'string' ? message : 'Server error. Please try again.' }, { status: 500 });
   }
