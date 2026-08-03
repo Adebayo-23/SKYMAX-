@@ -7,7 +7,6 @@ declare module 'nodemailer' {
       pass: string;
     };
   }
-
   export interface MailOptions {
     from?: string;
     to: string;
